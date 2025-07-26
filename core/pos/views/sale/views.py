@@ -4,10 +4,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, FormView
+from django.views.generic import CreateView, DeleteView, FormView, TemplateView
 
 from core.pos.forms import *
 from core.pos.utilities import printer
@@ -75,8 +75,13 @@ class SaleCreateView(GroupPermissionMixin, CreateView):
                     sale.client_id = int(request.POST['client'])
                     sale.iva = iva
                     sale.dscto = float(request.POST['dscto']) / 100
-                    sale.cash = float(request.POST['cash'])
-                    sale.change = float(request.POST['change'])
+                    sale.cash = float(0)
+                    sale.change = float(0)
+                    sale.paymentmethod = (request.POST['paymentmethod'])
+                    if sale.paymentmethod == 'transfer':
+                        sale.transfermethods = (request.POST['transfermethods'])
+                    else:
+                        sale.transfermethods = None
                     sale.save()
                     for i in json.loads(request.POST['products']):
                         product = Product.objects.get(pk=i['id'])
@@ -122,7 +127,7 @@ class SaleCreateView(GroupPermissionMixin, CreateView):
         return HttpResponse(json.dumps(data), content_type='application/json')
 
     def get_final_consumer(self):
-        queryset = Client.objects.filter(dni='9999999999999')
+        queryset = Client.objects.filter(dni='2222222222')
         if queryset.exists():
             return json.dumps(queryset[0].toJSON())
         return {}
@@ -138,6 +143,37 @@ class SaleCreateView(GroupPermissionMixin, CreateView):
         context['module_name'] = MODULE_NAME
         return context
 
+class SaleDeliveredUpdateView(View):
+    def post(self, request, *args, **kwargs):
+        data = {}
+        if not request.user.has_perm('app_label.delivered_sale'):
+            return JsonResponse({'error': 'No tienes permiso para hacer esto'}, status=403)
+        try:
+            sale_id = kwargs.get('pk')
+            sale = Sale.objects.get(pk=sale_id)
+            sale.delivered = not sale.delivered  # Cambia el valor
+            sale.save()
+            data['success'] = True
+            data['delivered'] = sale.delivered
+        except Exception as e:
+            data['error'] = str(e)
+        return JsonResponse(data)
+    
+class SalePaymentUpdateView(View):
+    def post(self, request, *args, **kwargs):
+        data = {}
+        if not request.user.has_perm('app_label.payment_sale'):
+            return JsonResponse({'error': 'No tienes permiso para hacer esto'}, status=403)
+        try:
+            sale_id = kwargs.get('pk')
+            sale = Sale.objects.get(pk=sale_id)
+            sale.payment = not sale.payment  # Cambia el valor
+            sale.save()
+            data['success'] = True
+            data['payment'] = sale.payment
+        except Exception as e:
+            data['error'] = str(e)
+        return JsonResponse(data)
 
 class SaleDeleteView(GroupPermissionMixin, DeleteView):
     model = Sale

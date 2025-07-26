@@ -13,6 +13,7 @@ MODULE_NAME = 'R.Ventas'
 class SaleReportView(LoginRequiredMixin, FormView):
     template_name = 'sale_report/report.html'
     form_class = ReportForm
+    permission_required = 'report_sales_menu'
 
     def post(self, request, *args, **kwargs):
         action = request.POST['action']

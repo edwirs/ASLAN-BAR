@@ -62,3 +62,10 @@
     top: 36%;
     width: 100%;
 }
+
+#product-list .product_card:hover {
+    background-color: #28a745 !important;
+    color: white !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}

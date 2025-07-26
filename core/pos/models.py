@@ -8,12 +8,16 @@ from django.forms import model_to_dict
 
 from config import settings
 from core.pos.choices import GENDER
+from core.pos.choices import PAYMENTMETHODS
+from core.pos.choices import TRANSFERMETHODS
+from core.pos.choices import AUTORIZATION_DISCOUNT
 from core.user.models import User
 
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name='Nombre')
     description = models.CharField(max_length=500, null=True, blank=True, verbose_name='Descripción')
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return self.name
@@ -35,18 +39,19 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Precio de Compra')
     pvp = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Precio de Venta')
     image = models.ImageField(upload_to='product/%Y/%m/%d', null=True, blank=True, verbose_name='Imagen')
-    is_service = models.BooleanField(default=False, verbose_name='¿Es un servicio?')
+    is_service = models.BooleanField(default=False, verbose_name='¿Sin Inventario?')
     with_tax = models.BooleanField(default=True, verbose_name='¿Se cobra impuesto?')
     stock = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return self.get_full_name()
 
     def get_full_name(self):
-        return f'{self.name} ({self.code}) ({self.category.name})'
+        return f'{self.name} ({self.code})'
 
     def get_short_name(self):
-        return f'{self.name} ({self.category.name})'
+        return f'{self.name}'
 
     def get_image(self):
         if self.image:
@@ -73,12 +78,14 @@ class Company(models.Model):
     ruc = models.CharField(max_length=13, verbose_name='Número de RUC')
     address = models.CharField(max_length=200, verbose_name='Dirección')
     mobile = models.CharField(max_length=10, verbose_name='Teléfono celular')
-    phone = models.CharField(max_length=9, verbose_name='Teléfono convencional')
+    phone = models.CharField(max_length=10, verbose_name='Teléfono convencional')
     email = models.CharField(max_length=50, verbose_name='Email')
     website = models.CharField(max_length=250, verbose_name='Dirección de página web')
     description = models.CharField(max_length=500, null=True, blank=True, verbose_name='Descripción')
     iva = models.DecimalField(default=0.00, decimal_places=2, max_digits=9, verbose_name='IVA')
     image = models.ImageField(null=True, blank=True, upload_to='company/%Y/%m/%d', verbose_name='Logotipo de la empresa')
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+    commission = models.IntegerField(null=True, verbose_name='Comision Empleado')
 
     def __str__(self):
         return self.name
@@ -114,6 +121,7 @@ class Client(models.Model):
     email = models.CharField(max_length=50, null=True, blank=True, verbose_name='Email')
     birthdate = models.DateField(default=datetime.now, verbose_name='Fecha de nacimiento')
     address = models.CharField(max_length=500, null=True, blank=True, verbose_name='Dirección')
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return self.get_full_name()
@@ -135,6 +143,30 @@ class Client(models.Model):
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
 
+class Provider(models.Model):
+    names = models.CharField(max_length=150, verbose_name='Nombre')
+    dni = models.CharField(max_length=13, unique=True, verbose_name='Número de identificacion')
+    gender = models.CharField(max_length=50, choices=GENDER, default=GENDER[0][0], verbose_name='Genero')
+    mobile = models.CharField(max_length=10, null=True, blank=True, verbose_name='Teléfono')
+    email = models.CharField(max_length=50, null=True, blank=True, verbose_name='Email')
+    address = models.CharField(max_length=500, null=True, blank=True, verbose_name='Dirección')
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+
+    def __str__(self):
+        return self.get_full_name()
+
+    def get_full_name(self):
+        return f'{self.names} ({self.dni})'
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        item['text'] = self.get_full_name()
+        item['gender'] = {'id': self.gender, 'name': self.get_gender_display()}
+        return item
+
+    class Meta:
+        verbose_name = 'Proveedor'
+        verbose_name_plural = 'Proveedores'
 
 class Sale(models.Model):
     company = models.ForeignKey(Company, on_delete=models.PROTECT, verbose_name='Compañia')
@@ -149,8 +181,15 @@ class Sale(models.Model):
     iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Iva')
     total_iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor de iva')
     total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total a pagar')
-    cash = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Efectivo recibido')
-    change = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Cambio')
+    cash = models.DecimalField(max_digits=9, decimal_places=2, null=True, default=0.00, verbose_name='Efectivo recibido')
+    change = models.DecimalField(max_digits=9, decimal_places=2, null=True, default=0.00, verbose_name='Cambio')
+    paymentmethod = models.CharField(max_length=50, choices=PAYMENTMETHODS, default=PAYMENTMETHODS[0][0], verbose_name='Método de pago')
+    transfermethods = models.CharField(max_length=50, choices=TRANSFERMETHODS, default=TRANSFERMETHODS[0][0], verbose_name='Tipo transferencia', null=True)
+    autorization_discount = models.CharField(max_length=50, choices=AUTORIZATION_DISCOUNT, default=AUTORIZATION_DISCOUNT[0][0], verbose_name='Autorización Descuento', null=True)
+    delivered = models.BooleanField(default=False, verbose_name='Entregado')
+    payment = models.BooleanField(default=False, verbose_name='Pago')
+    discount_value = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor Descuento', null = True)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return self.client.get_full_name()
@@ -195,6 +234,11 @@ class Sale(models.Model):
         item['total'] = float(self.total)
         item['cash'] = float(self.cash)
         item['change'] = float(self.change)
+        item['paymentmethod'] = {'id': self.paymentmethod, 'name': self.get_paymentmethod_display()}
+        item['transfermethods'] = {'id': self.transfermethods, 'name': self.get_transfermethods_display()}
+        item['autorization_discount'] = {'id': self.autorization_discount, 'name': self.get_autorization_discount_display()}
+        item['delivered'] = self.delivered
+        item['discount_value'] = float(self.discount_value or 0)
         return item
 
     class Meta:
@@ -204,8 +248,16 @@ class Sale(models.Model):
         permissions = (
             ('view_sale', 'Can view Venta'),
             ('add_sale', 'Can add Venta'),
+            ('add_bar', 'Can add Venta Barra'),
             ('delete_sale', 'Can delete Venta'),
             ('view_sale_client', 'Can view_sale_client Venta'),
+            ('delivered_sale', 'Can delivered Venta'),
+            ('discounts_sale', 'Can discounts Venta'),
+            ('report_sales_menu', 'can view sales report'),
+            ('report_employee_menu', 'can view sales employee report'),
+            ('report_employee_debe', 'can view sales employee debe report'),
+            ('report_employee_gain', 'can view employee gain report'),
+            ('sale_by_product', 'can view sales by product report'),
         )
 
 
@@ -221,6 +273,7 @@ class SaleDetail(models.Model):
     dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return self.product.name
@@ -245,3 +298,264 @@ class SaleDetail(models.Model):
         verbose_name = 'Detalle de Venta'
         verbose_name_plural = 'Detalle de Ventas'
         default_permissions = ()
+
+class Price(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, verbose_name='Compañia')
+    client = models.ForeignKey(Client, on_delete=models.PROTECT, verbose_name='Cliente')
+    employee = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Empleado')
+    creation_date = models.DateTimeField(auto_now_add=True, verbose_name='Fecha y hora de registro')
+    date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
+    subtotal_12 = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal 12%')
+    subtotal_0 = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal 0%')
+    dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Descuento')
+    total_dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor del descuento')
+    iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Iva')
+    total_iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor de iva')
+    total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total a pagar')
+    cash = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Efectivo recibido')
+    change = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Cambio')
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+
+    def __str__(self):
+        return self.client.get_full_name()
+
+    def get_subtotal_without_taxes(self):
+        return float(self.pricedetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField())).get('result'))
+
+    def get_full_subtotal(self):
+        return float(self.subtotal_0) + float(self.subtotal_12)
+
+    def calculate_invoice(self):
+        self.subtotal_0 = float(self.pricedetail_set.filter(product__with_tax=False).aggregate(result=Coalesce(Sum('total'), 0.00, output_field=FloatField())).get('result'))
+        self.subtotal_12 = float(self.pricedetail_set.filter(product__with_tax=True).aggregate(result=Coalesce(Sum('total'), 0.00, output_field=FloatField())).get('result'))
+        self.total_iva = float(self.pricedetail_set.filter(product__with_tax=True).aggregate(result=Coalesce(Sum('total_iva'), 0.00, output_field=FloatField())).get('result'))
+        self.total_dscto = float(self.get_full_subtotal()) * float(self.dscto)
+        self.total = float(self.get_full_subtotal()) + float(self.total_iva) - float(self.total_dscto)
+        self.save()
+
+    def calculate_detail(self):
+        for detail in self.pricedetail_set.filter():
+            detail.price = float(detail.price)
+            detail.iva = float(self.iva)
+            detail.price_with_vat = detail.price + (detail.price * detail.iva)
+            detail.subtotal = detail.price * detail.cant
+            detail.total_dscto = detail.subtotal * float(detail.dscto)
+            detail.total_iva = (detail.subtotal - detail.total_dscto) * detail.iva
+            detail.total = detail.subtotal - detail.total_dscto
+            detail.save()
+
+    def toJSON(self):
+        item = model_to_dict(self, exclude=['company', 'creation_date'])
+        item['client'] = self.client.toJSON()
+        item['employee'] = self.employee.toJSON()
+        item['date_joined'] = self.date_joined.strftime('%Y-%m-%d')
+        item['subtotal_12'] = float(self.subtotal_12)
+        item['subtotal_0'] = float(self.subtotal_0)
+        item['subtotal'] = float(self.get_subtotal_without_taxes())
+        item['dscto'] = float(self.dscto)
+        item['total_dscto'] = float(self.total_dscto)
+        item['iva'] = float(self.iva)
+        item['total_iva'] = float(self.total_iva)
+        item['total'] = float(self.total)
+        item['cash'] = float(self.cash)
+        item['change'] = float(self.change)
+        return item
+
+    class Meta:
+        verbose_name = 'Cotización'
+        verbose_name_plural = 'Cotizaciones'
+        default_permissions = ()
+        permissions = (
+            ('view_price', 'Can view Cotizacion'),
+            ('add_price', 'Can add Cotizacion'),
+            ('delete_price', 'Can delete Cotizacion'),
+            ('view_price_client', 'Can view_price_client Cotizacion'),
+        )
+
+
+class PriceDetail(models.Model):
+    price_id = models.ForeignKey(Price, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    cant = models.IntegerField(default=0)
+    price = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    price_with_vat = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    subtotal = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total_iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total_dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+
+    def __str__(self):
+        return self.product.name
+
+    def get_iva_percent(self):
+        return int(self.iva * 100)
+
+    def toJSON(self):
+        item = model_to_dict(self, exclude=['sale'])
+        item['product'] = self.product.toJSON()
+        item['price'] = float(self.price)
+        item['price_with_vat'] = float(self.price_with_vat)
+        item['subtotal'] = float(self.subtotal)
+        item['iva'] = float(self.subtotal)
+        item['total_iva'] = float(self.subtotal)
+        item['dscto'] = float(self.dscto)
+        item['total_dscto'] = float(self.total_dscto)
+        item['total'] = float(self.total)
+        return item
+
+    class Meta:
+        verbose_name = 'Detalle de Cotización'
+        verbose_name_plural = 'Detalle de Cotización'
+        default_permissions = ()
+
+
+class Buy(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, verbose_name='Compañia')
+    provider = models.ForeignKey(Client, on_delete=models.PROTECT, verbose_name='Proveedor')
+    employee = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Empleado')
+    creation_date = models.DateTimeField(auto_now_add=True, verbose_name='Fecha y hora de registro')
+    date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
+    subtotal_12 = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal 12%')
+    subtotal_0 = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Subtotal 0%')
+    dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Descuento')
+    total_dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor del descuento')
+    iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Iva')
+    total_iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor de iva')
+    total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Total a pagar')
+    cash = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Efectivo pagado')
+    change = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Cambio')
+    paymentmethod = models.CharField(max_length=50, choices=PAYMENTMETHODS, default=PAYMENTMETHODS[0][0], verbose_name='Método de pago')
+    transfermethods = models.CharField(max_length=50, choices=TRANSFERMETHODS, default=TRANSFERMETHODS[0][0], verbose_name='Tipo transferencia', null=True)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+
+    def __str__(self):
+        return self.provider.get_full_name()
+
+    def get_subtotal_without_taxes(self):
+        return float(self.buydetail_set.filter().aggregate(result=Coalesce(Sum('subtotal'), 0.00, output_field=FloatField())).get('result'))
+
+    def get_full_subtotal(self):
+        return float(self.subtotal_0) + float(self.subtotal_12)
+
+    def calculate_invoice(self):
+        self.subtotal_0 = float(self.buydetail_set.filter(product__with_tax=False).aggregate(result=Coalesce(Sum('total'), 0.00, output_field=FloatField())).get('result'))
+        self.subtotal_12 = float(self.buydetail_set.filter(product__with_tax=True).aggregate(result=Coalesce(Sum('total'), 0.00, output_field=FloatField())).get('result'))
+        self.total_iva = float(self.buydetail_set.filter(product__with_tax=True).aggregate(result=Coalesce(Sum('total_iva'), 0.00, output_field=FloatField())).get('result'))
+        self.total_dscto = float(self.get_full_subtotal()) * float(self.dscto)
+        self.total = float(self.get_full_subtotal()) + float(self.total_iva) - float(self.total_dscto)
+        self.save()
+
+    def calculate_detail(self):
+        for detail in self.buydetail_set.filter():
+            detail.price = float(detail.price)
+            detail.iva = float(self.iva)
+            detail.price_with_vat = detail.price + (detail.price * detail.iva)
+            detail.subtotal = detail.price * detail.cant
+            detail.total_dscto = detail.subtotal * float(detail.dscto)
+            detail.total_iva = (detail.subtotal - detail.total_dscto) * detail.iva
+            detail.total = detail.subtotal - detail.total_dscto
+            detail.save()
+
+    def toJSON(self):
+        item = model_to_dict(self, exclude=['company', 'creation_date'])
+        item['provider'] = self.provider.toJSON()
+        item['employee'] = self.employee.toJSON()
+        item['date_joined'] = self.date_joined.strftime('%Y-%m-%d')
+        item['subtotal_12'] = float(self.subtotal_12)
+        item['subtotal_0'] = float(self.subtotal_0)
+        item['subtotal'] = float(self.get_subtotal_without_taxes())
+        item['dscto'] = float(self.dscto)
+        item['total_dscto'] = float(self.total_dscto)
+        item['iva'] = float(self.iva)
+        item['total_iva'] = float(self.total_iva)
+        item['total'] = float(self.total)
+        item['cash'] = float(self.cash)
+        item['change'] = float(self.change)
+        item['paymentmethod'] = {'id': self.paymentmethod, 'name': self.get_paymentmethod_display()}
+        item['transfermethods'] = {'id': self.transfermethods, 'name': self.get_transfermethods_display()}
+        return item
+
+    class Meta:
+        verbose_name = 'Compra'
+        verbose_name_plural = 'Compras'
+        default_permissions = ()
+        permissions = (
+            ('view_buy', 'Can view Compra'),
+            ('add_buy', 'Can add Compra'),
+            ('delete_buy', 'Can delete Compra'),
+            ('view_buy_provider', 'Can view_buy_provider Compra'),
+        )
+
+
+class BuyDetail(models.Model):
+    buy_id = models.ForeignKey(Buy, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    cant = models.IntegerField(default=0)
+    price = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    price_with_vat = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    subtotal = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total_iva = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total_dscto = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    is_active = models.BooleanField(default=True, verbose_name='Estado')
+
+    def __str__(self):
+        return self.product.name
+
+    def get_iva_percent(self):
+        return int(self.iva * 100)
+
+    def toJSON(self):
+        item = model_to_dict(self, exclude=['sale'])
+        item['product'] = self.product.toJSON()
+        item['price'] = float(self.price)
+        item['price_with_vat'] = float(self.price_with_vat)
+        item['subtotal'] = float(self.subtotal)
+        item['iva'] = float(self.subtotal)
+        item['total_iva'] = float(self.subtotal)
+        item['dscto'] = float(self.dscto)
+        item['total_dscto'] = float(self.total_dscto)
+        item['total'] = float(self.total)
+        return item
+
+    class Meta:
+        verbose_name = 'Detalle de Compra'
+        verbose_name_plural = 'Detalle de Compra'
+        default_permissions = ()
+
+class Bills(models.Model):
+    source = models.CharField(max_length=100, verbose_name='Fuente')
+    user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Responsable')
+    reason = models.CharField(max_length=200, verbose_name='Motivo')
+    description = models.TextField(null=True, blank=True, verbose_name='Descripción')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor')
+    created_at = models.DateField(auto_now_add=True, verbose_name='Fecha de creación')
+
+    def __str__(self):
+        return self.source
+
+    def toJSON(self):
+        item = model_to_dict(self)
+        return item
+
+    class Meta:
+        verbose_name = 'Gasto'
+        verbose_name_plural = 'Gastos'
+        default_permissions = ()
+        permissions = (
+            ('view_bill', 'Can view Gasto'),
+        )
+
+
+class ProductAutoAdd(models.Model):
+    trigger_product = models.ForeignKey(Product, related_name='auto_triggers', on_delete=models.CASCADE)
+    auto_product = models.ForeignKey(Product, related_name='auto_adds', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f'{self.trigger_product} -> {self.auto_product} (x{self.quantity})'

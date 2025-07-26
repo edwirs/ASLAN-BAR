@@ -1,4 +1,6 @@
 var select_client;
+var select_paymentmethod;
+var select_transfermethods;
 var tblProducts, tblSearchProducts;
 var input_search_product, input_birthdate, input_date_joined, input_cash, input_change;
 
@@ -39,7 +41,7 @@ var sale = {
         $('input[name="iva"]').val(this.detail.iva.toFixed(2));
         $('input[name="total_iva"]').val(this.detail.total_iva.toFixed(2));
         $('input[name="total_dscto"]').val(this.detail.total_dscto.toFixed(2));
-        $('input[name="total"]').val(this.detail.total.toFixed(2));
+        $('input[name="total"]').val('$' + this.detail.total.toLocaleString('es-CL'));
 
         var cash = parseFloat(input_cash.val());
         var change = cash - sale.detail.total;
@@ -68,7 +70,6 @@ var sale = {
                 {data: "stock"},
                 {data: "cant"},
                 {data: "pvp"},
-                {data: "total_dscto"},
                 {data: "total"},
             ],
             columnDefs: [
@@ -76,28 +77,19 @@ var sale = {
                     targets: [-5],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        if (row.is_service) {
-                            return '---';
-                        }
+                        
                         return data;
                     }
                 },
                 {
-                    targets: [-4],
+                    targets: [-3],
                     class: 'text-center',
                     render: function (data, type, row) {
                         return '<input type="text" class="form-control" autocomplete="off" name="cant" value="' + row.cant + '">';
                     }
                 },
                 {
-                    targets: [-2],
-                    class: 'text-center',
-                    render: function (data, type, row) {
-                        return '<input type="text" class="form-control" autocomplete="off" name="dscto_unitary" value="' + row.dscto + '">';
-                    }
-                },
-                {
-                    targets: [-1, -3],
+                    targets: [-1, -2],
                     class: 'text-center',
                     render: function (data, type, row) {
                         return '$' + data.toFixed(2);
@@ -107,7 +99,7 @@ var sale = {
                     targets: [0],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return '<a rel="remove" class="btn btn-danger btn-sm"><i class="fas fa-times"></i></a>';
+                        return '<a rel="remove" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>';
                     }
                 },
             ],
@@ -147,10 +139,13 @@ var sale = {
 $(function () {
     select_client = $('select[name="client"]');
     input_cash = $('input[name="cash"]');
+    input_total = $('input[name="total"]');
     input_change = $('input[name="change"]');
     input_search_product = $('input[name="search_product"]');
     input_birthdate = $('input[name="birthdate"]');
     input_date_joined = $('input[name="date_joined"]');
+    select_paymentmethod = $('select[name="paymentmethod"]');
+    select_transfermethods = $('select[name="transfermethods"]');
 
     // Client
 
@@ -160,6 +155,16 @@ $(function () {
         dropdownParent: $('#myModalClient')
     });
 
+    $('select[name="paymentmethod"]').select2({
+        language: 'es',
+        theme: 'bootstrap4'
+    });
+
+    $('select[name="transfermethods"]').select2({
+        language: 'es',
+        theme: 'bootstrap4'
+    });
+
     input_birthdate.datetimepicker({
         useCurrent: false,
         format: 'YYYY-MM-DD',
@@ -167,6 +172,31 @@ $(function () {
         keepOpen: false,
         maxDate: new Date()
     });
+
+    select_paymentmethod.select2({
+        theme: "bootstrap4",
+        language: 'es'
+    });
+
+    select_transfermethods.select2({
+        theme: "bootstrap4",
+        language: 'es'
+    });
+
+    select_transfermethods.parent().hide(); 
+    
+    select_paymentmethod.on('change', function(){
+        const selectedValue = $(this).val();
+        if (selectedValue === 'transfer') {
+            select_transfermethods.parent().show();
+        } else if (selectedValue === 'mixed') {
+            select_transfermethods.parent().show();
+        } else {
+            select_transfermethods.parent().hide();
+        }
+    });
+
+    select_paymentmethod.trigger('change');
 
     select_client.select2({
         theme: "bootstrap4",
@@ -435,9 +465,9 @@ $(function () {
         if (sale.detail.products.length === 0) {
             return message_error('Debe tener al menos 1 producto en su detalle');
         }
-        if (parseFloat(input_change.val()) < 0.00) {
-            return message_error('El efectivo debe ser mayor o igual al total de la venta');
-        }
+        //if (parseFloat(input_change.val()) < 0.00) {
+        //    return message_error('El efectivo debe ser mayor o igual al total de la venta');
+        //}
         var form = $(this)[0];
         var params = new FormData(form);
         params.append('products', JSON.stringify(sale.detail.products));
