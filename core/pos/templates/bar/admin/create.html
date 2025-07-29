@@ -38,21 +38,30 @@
     <div class="col-lg-7">
         <div class="card border p-3 mb-4 h-100">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-3" id="product-list">
-                    {% for product in products %}
-                        <div class="col">
-                            <div class="card h-100 product_card card-outline card-success" 3
+                    {% for entry in products_grouped %}
+                        {% with product=entry.product %}
+                            <div class="col">
+                                <div class="card h-100 product_card card-outline card-success"
                                     style="cursor: pointer;"
                                     data-id="{{ product.id }}"
                                     data-code="{{ product.code }}"
                                     data-name="{{ product.name }}"
                                     data-price="{{ product.pvp }}">
-                                <div class="card-body" style="font-size: 13px;">
-                                    <h5 class="card-title">{{ product.code }}</h5>
-                                    <p class="card-text fw-bold">{{ product.name }}</p>
-                                    <p class="card-text">Cant: {{ product.stock }}</p>
+                                    <div class="card-body" style="font-size: 13px;">
+                                        <h5 class="card-title">{{ product.code }}</h5>
+                                        <p class="card-text fw-bold">{{ product.name }}</p>
+                                        <p class="card-text">
+                                            Total: {{ entry.total_stock }}<br>
+                                            {% if request.user.is_superuser %}
+                                                {% for g in entry.by_group %}
+                                                    {{ g.group }}: {{ g.stock }}<br>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endwith %}
                     {% endfor %}
                 </div>           
         </div>

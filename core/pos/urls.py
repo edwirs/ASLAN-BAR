@@ -9,6 +9,7 @@ from core.pos.views.price.views import *
 from core.pos.views.buy.views import *
 from core.pos.views.provider.views import *
 from core.pos.views.bar.views import *
+from core.pos.views.inventory_manager.views import *
 
 urlpatterns = [
     # category
@@ -52,4 +53,6 @@ urlpatterns = [
     path('buy/admin/print/invoice/<int:pk>/', BuyPrintInvoiceView.as_view(), name='buy_admin_print_invoice'),
      # bar
     path('bar/admin/add/', BarCreateView.as_view(), name='bar_admin_create'),
+     #inventory manager
+    path('inventory/management/', InventoryManagementView.as_view(), name='inventory_management'),
 ]

@@ -437,3 +437,18 @@ class BarForm(forms.ModelForm):
                 'style': 'width: 100%'
             }),
         }
+
+class InventoryGroupForm(forms.ModelForm):
+    class Meta:
+        model = InventoryGroup
+        fields = ['name']
+
+class UserInventoryGroupForm(forms.ModelForm):
+    class Meta:
+        model = UserInventoryGroup
+        fields = ['user', 'group']
+
+class ProductInventoryGroupStockForm(forms.ModelForm):
+    class Meta:
+        model = ProductInventoryGroupStock
+        fields = ['product', 'group', 'stock']

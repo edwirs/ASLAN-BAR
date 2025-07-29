@@ -559,3 +559,27 @@ class ProductAutoAdd(models.Model):
 
     def __str__(self):
         return f'{self.trigger_product} -> {self.auto_product} (x{self.quantity})'
+    
+class InventoryGroup(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name='Grupo Inventario')
+
+    def __str__(self):
+        return self.name
+    
+class UserInventoryGroup(models.Model):
+    user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Empleado')
+    group = models.ForeignKey(InventoryGroup, on_delete=models.CASCADE, verbose_name='Grupo Inventario')
+
+    def __str__(self):
+        return f'{self.user.username} - {self.group.name}'
+    
+class ProductInventoryGroupStock(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    group = models.ForeignKey(InventoryGroup, on_delete=models.CASCADE)
+    stock = models.IntegerField(default=0, verbose_name='Stock')
+
+    class Meta:
+        unique_together = ('product', 'group')
+
+    def __str__(self):
+        return f'{self.product.name} - {self.group.name} ({self.stock})'

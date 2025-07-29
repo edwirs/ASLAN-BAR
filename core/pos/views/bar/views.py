@@ -33,7 +33,7 @@ class BarCreateView(GroupPermissionMixin, CreateView):
                     iva = float(company.iva) / 100
                     sale = Sale()
                     sale.company = company
-                    if request.user.username == 'meseros':
+                    if request.user.username == 'meseros' or request.user.username == 'meseros2':
                         sale.employee_id = request.POST.get('employee')
                     else:
                         sale.employee_id = request.user.id
@@ -57,6 +57,21 @@ class BarCreateView(GroupPermissionMixin, CreateView):
                     sale.save()
                     for i in json.loads(request.POST['products']):
                         product = Product.objects.get(pk=i['id'])
+
+                        # Obtener el grupo del usuario
+                        try:
+                            user_group = UserInventoryGroup.objects.get(user=request.user).group
+                        except UserInventoryGroup.DoesNotExist:
+                            raise Exception("Este usuario no tiene un grupo de inventario asignado.")
+                        
+                        # Obtener stock asignado a ese grupo
+                        group_stock = ProductInventoryGroupStock.objects.get(product=product, group=user_group)
+
+                        # Validar que haya stock suficiente en el grupo
+                        if group_stock.stock < int(i['cant']):
+                            raise Exception(f"No hay suficiente stock del producto '{product.name}' en tu grupo.")
+
+                        # Crear detalle de venta
                         detail = SaleDetail()
                         detail.sale_id = sale.id
                         detail.product_id = product.id
@@ -64,22 +79,44 @@ class BarCreateView(GroupPermissionMixin, CreateView):
                         detail.price = float(i['pvp'])
                         detail.dscto = float(i['dscto']) / 100
                         detail.save()
-                        sale.calculate_detail()
-                        detail.product.stock -= detail.cant
-                        detail.product.save()
 
+                        sale.calculate_detail()
+
+                        # Descontar del stock del grupo
+                        group_stock.stock -= detail.cant
+                        group_stock.save()
+
+                        # Descontar del inventario general
+                        product.stock -= detail.cant
+                        product.save()
+
+                        # Manejo de productos automáticos
                         auto_products = ProductAutoAdd.objects.filter(trigger_product=product)
                         for auto in auto_products:
+                            auto_product = auto.auto_product
+
+                            # Obtener stock del producto autoasociado en el grupo
+                            auto_group_stock = ProductInventoryGroupStock.objects.get(product=auto_product, group=user_group)
+
+                            if auto_group_stock.stock < auto.quantity:
+                                raise Exception(f"No hay suficiente stock del producto automático '{auto_product.name}' en tu grupo.")
+
                             extra_detail = SaleDetail()
                             extra_detail.sale_id = sale.id
-                            extra_detail.product_id = auto.auto_product.id
+                            extra_detail.product_id = auto_product.id
                             extra_detail.cant = auto.quantity
                             extra_detail.price = 0
                             extra_detail.dscto = 0
                             extra_detail.save()
                             sale.calculate_detail()
-                            auto.auto_product.stock -= auto.quantity
-                            auto.auto_product.save()
+
+                            # Descontar del stock del grupo para producto automático
+                            auto_group_stock.stock -= auto.quantity
+                            auto_group_stock.save()
+
+                            # Descontar del inventario general del producto automático
+                            auto_product.stock -= auto.quantity
+                            auto_product.save()
                     sale.calculate_invoice()
                     # Aplicar descuento personalizado (después de calcular total)
                     discount_value = float(request.POST.get('discount_value', 0))
@@ -141,5 +178,29 @@ class BarCreateView(GroupPermissionMixin, CreateView):
         context['company'] = Company.objects.first()
         context['final_consumer'] = self.get_final_consumer()
         context['module_name'] = MODULE_NAME
+
+        user = self.request.user
+
+        # Grupos de inventario del usuario
+        user_groups = InventoryGroup.objects.filter(userinventorygroup__user=user)
+
+        # Obtener los stocks por producto que estén en esos grupos
+        product_stocks = ProductInventoryGroupStock.objects.filter(group__in=user_groups).select_related('product', 'group').order_by('product__id')
+
+        # Crear una estructura tipo: { product_id: {'product': ..., 'total_stock': ..., 'by_group': [...] } }
+        product_data = {}
+        for ps in product_stocks:
+            pid = ps.product.id
+            if pid not in product_data:
+                product_data[pid] = {
+                    'product': ps.product,
+                    'total_stock': 0,
+                    'by_group': []
+                }
+            product_data[pid]['total_stock'] += ps.stock
+            product_data[pid]['by_group'].append({'group': ps.group.name, 'stock': ps.stock})
+
+        context['products_grouped'] = product_data.values()
+
         context['products'] = Product.objects.filter(Q(stock__gt=0) | Q(is_service=True)).order_by('id')
         return context

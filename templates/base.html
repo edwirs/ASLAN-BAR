@@ -398,6 +398,15 @@
                   </li>
                 {% endif %}
 
+                {% if perms.pos.view_company %}
+                  <li class="nav-item">
+                    <a href="{% url 'inventory_management' %}" class="nav-link" >
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Administrador Inventario</p>
+                    </a>
+                  </li>
+                {% endif %}
+
                 {% if perms.dashboard.view_dashboard %}
                   <li class="nav-item">
                     <a href="{% url 'dashboard_update' %}" class="nav-link" >

@@ -450,7 +450,7 @@ $(function () {
         if (existingRow.length > 0) {
             // Si ya existe, simplemente aumentar cantidad +1
             let qtyInput = existingRow.find('.input-qty');
-            qtyInput.val(parseInt(qtyInput.val()) + 1).trigger('input');
+            qtyInput.val(parseInt(qtyInput.val()) + 1).trigger('change');
             return;
         }
 
@@ -472,14 +472,18 @@ $(function () {
         $('#tblProductsBarra tbody').append(row);
 
         // Al cambiar cantidad
-        row.find('.input-qty').on('input', function() {
+        row.find('.input-qty').on('change', function() {
             let qty = parseInt($(this).val());
-            if (qty < 1 || isNaN(qty)) {
+            if (isNaN(qty) || qty < 1) {
                 qty = 1;
                 $(this).val(qty);
             }
-            const totalPrice = qty * unitPrice;
-            row.find('.price-display').text(formatPrice(totalPrice));
+
+            const tr = $(this).closest('tr');
+            const pricePerUnit = parseFloat($(this).closest('tr').data('price') || unitPrice);
+            const totalPrice = qty * pricePerUnit;
+
+            tr.find('.price-display').text(formatPrice(totalPrice));
             updateTotal();
         });
 
