@@ -115,12 +115,12 @@ def get_db_config(environ_var='DATABASE_URL'):
 
 DATABASES = {
     'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'Aslan_bar',
-            'USER': 'postgres',
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'aslan_bar',
+            'USER': 'root',
             'PASSWORD': 'Postgres2025',
-            'HOST': 'localhost',
-            'PORT': '5432'
+            'HOST': '127.0.0.1',
+            'PORT': '3306'
             }
 }
 
