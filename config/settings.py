@@ -31,7 +31,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env.local'))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=True)
+DEBUG = env('DEBUG', default=True) #se debe cambiar a false para servidor
 
 ALLOWED_HOSTS = ["*"]
 
@@ -116,7 +116,7 @@ def get_db_config(environ_var='DATABASE_URL'):
 DATABASES = {
     'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'Aslan_bar',
+            'NAME': 'aslan_bar',
             'USER': 'postgres',
             'PASSWORD': 'Postgres2025',
             'HOST': 'localhost',
@@ -147,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-ec'
 
-TIME_ZONE = 'US/Pacific'
+TIME_ZONE = 'US/Pacific' #se cambia por America/Los_Angeles para subir al servidor
 
 USE_I18N = True
 

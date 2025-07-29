@@ -37,7 +37,7 @@ class BuyListView(GroupPermissionMixin, FormView):
                     data.append(i.toJSON())
             elif action == 'search_detail_products':
                 data = []
-                for i in BuyDetail.objects.filter(price_id_id=request.POST['id']):
+                for i in BuyDetail.objects.filter(buy_id_id=request.POST['id']):
                     data.append(i.toJSON())
             else:
                 data['error'] = 'No ha seleccionado ninguna opción'
