@@ -31,7 +31,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env.local'))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=True) #se debe cambiar a false para servidor
+DEBUG = env('DEBUG', default=False) #se debe cambiar a false para servidor
 
 ALLOWED_HOSTS = ["*"]
 
@@ -147,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-ec'
 
-TIME_ZONE = 'US/Pacific' #se cambia por America/Los_Angeles para subir al servidor
+TIME_ZONE = 'America/Los_Angeles' #se cambia por America/Los_Angeles para subir al servidor
 
 USE_I18N = True
 
