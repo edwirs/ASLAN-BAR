@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', default=False) #se debe cambiar a false para servidor
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['aslanbar-dev.com','www.aslanbar-dev.com','148.230.86.99','localhost','127.0.0.1']
 
 # Application definition
 
