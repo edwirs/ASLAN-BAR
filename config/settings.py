@@ -116,7 +116,7 @@ def get_db_config(environ_var='DATABASE_URL'):
 DATABASES = {
     'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'aslan_bar',
+            'NAME': 'Aslan_bar',
             'USER': 'postgres',
             'PASSWORD': 'Postgres2025',
             'HOST': 'localhost',
