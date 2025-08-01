@@ -363,9 +363,9 @@ class BarForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields['client'].queryset = Client.objects.none()
-
-        if user and user.username == 'admin' or user.username == 'barra' or user.username == 'barra2': 
-            self.fields['employee'].initial = user.pk
+        
+        if user and user.has_perm('pos.list_employee'):  # cambia al permiso real
+            self.fields['employee'].initial = user.pk  # o user.id
 
     class Meta:
         model = Sale

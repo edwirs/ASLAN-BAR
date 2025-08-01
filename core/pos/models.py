@@ -258,6 +258,7 @@ class Sale(models.Model):
             ('report_employee_debe', 'can view sales employee debe report'),
             ('report_employee_gain', 'can view employee gain report'),
             ('sale_by_product', 'can view sales by product report'),
+            ('list_employee', 'can view list employee'),
         )
 
 
