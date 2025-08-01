@@ -365,7 +365,7 @@ class BarForm(forms.ModelForm):
         self.fields['client'].queryset = Client.objects.none()
 
         # Ordenar alfabéticamente por nombre (ajusta al campo correcto)
-        self.fields['employee'].queryset = User.objects.all().order_by('first_name')
+        self.fields['employee'].queryset = User.objects.all().order_by('names')
         
         if user and user.has_perm('pos.list_employee'):  # cambia al permiso real
             self.fields['employee'].initial = user.pk  # o user.id
