@@ -5,6 +5,7 @@ from core.reports.views.employee_report.views import EmployeeSaleReportView
 from core.reports.views.employee_debe_report.views import EmployeeDebeReportView
 from core.reports.views.employee_gain.views import EmployeeGainReportView
 from core.reports.views.sale_by_product_report.views import SaleByProductReportView
+from core.reports.views.sale_discount_cortesia.views import SaleDiscountReportView
 
 urlpatterns = [
     path('sale/', SaleReportView.as_view(), name='sale_report'),
@@ -12,4 +13,5 @@ urlpatterns = [
     path('employeedebe/', EmployeeDebeReportView.as_view(), name='employee_debe_report'),
     path('employeegain/', EmployeeGainReportView.as_view(), name='employee_gain_report'),
     path('salebyproduct/', SaleByProductReportView.as_view(), name='sale_by_product'),
+    path('salediscount/', SaleDiscountReportView.as_view(), name='sale_discount'),
 ]

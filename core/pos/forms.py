@@ -237,6 +237,13 @@ class SaleForm(forms.ModelForm):
                 'class': 'select2',
                 'style': 'width: 100%'
             }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 
+                'Ingrese una descripción', 
+                'rows': 1, 
+                'cols': 3
+            }),
         }
 
 class PriceForm(forms.ModelForm):
@@ -439,6 +446,13 @@ class BarForm(forms.ModelForm):
                 'class': 'form-select select2',
                 'style': 'width: 100%'
             }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 
+                'Ingrese una descripción', 
+                'rows': 2, 
+                'cols': 3
+            }),
         }
 
 class InventoryGroupForm(forms.ModelForm):
@@ -455,3 +469,38 @@ class ProductInventoryGroupStockForm(forms.ModelForm):
     class Meta:
         model = ProductInventoryGroupStock
         fields = ['product', 'group', 'stock']
+
+class ProductAutoAddForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = ProductAutoAdd
+        fields = '__all__'
+        widgets = {
+            'trigger_product': forms.Select(
+                attrs={'class': 'form-control select2', 'style': 'width: 100%;'}
+            ),
+            'auto_product': forms.Select(
+                attrs={'class': 'form-control select2', 'style': 'width: 100%;'}
+            ),
+            'quantity': forms.TextInput(
+                attrs={
+                    'class': 'form-control touchspin',
+                    'autocomplete': 'off',
+                    'step': '0.01',   # permite 2 decimales
+                    'min': '0'
+                }
+            ),
+        }
+
+    def save(self, commit=True):
+        data = {}
+        try:
+            if self.is_valid():
+                super().save()
+            else:
+                data['error'] = self.errors
+        except Exception as e:
+            data['error'] = str(e)
+        return data

@@ -216,6 +216,24 @@
                   </a>
                 </li>
               {% endif %}
+
+              {% if perms.pos.view_product %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'productautoadd_list' %}">
+                    <i class="far fa-circle nav-icon"></i>
+                    Productos descuento
+                  </a>
+                </li>
+              {% endif %}
+
+              {% if perms.pos.view_company %}
+                  <li class="nav-item">
+                    <a href="{% url 'inventory_management' %}" class="nav-link" >
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Administrador Inventario</p>
+                    </a>
+                  </li>
+                {% endif %}
             </ul>
           </li>
           {% endif %}
@@ -334,6 +352,17 @@
                   </li>
                 </ul>
               {% endif %}
+
+              {% if perms.pos.sale_by_product %}
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'sale_discount' %}" class="nav-link" >
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Descuentos y/o Cortesías</p>
+                    </a>
+                  </li>
+                </ul>
+              {% endif %}
             </li>
           {% endif %}
 
@@ -394,15 +423,6 @@
                     <a href="{% url 'company_update' %}" class="nav-link" >
                       <i class="far fa-circle nav-icon"></i>
                       <p>Compañia</p>
-                    </a>
-                  </li>
-                {% endif %}
-
-                {% if perms.pos.view_company %}
-                  <li class="nav-item">
-                    <a href="{% url 'inventory_management' %}" class="nav-link" >
-                      <i class="far fa-circle nav-icon"></i>
-                      <p>Administrador Inventario</p>
                     </a>
                   </li>
                 {% endif %}

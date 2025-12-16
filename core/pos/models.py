@@ -189,6 +189,7 @@ class Sale(models.Model):
     delivered = models.BooleanField(default=False, verbose_name='Entregado')
     payment = models.BooleanField(default=False, verbose_name='Pago')
     discount_value = models.DecimalField(max_digits=9, decimal_places=2, default=0.00, verbose_name='Valor Descuento', null = True)
+    description = models.CharField(max_length=500, null=True, blank=True, verbose_name='Descripción')
     is_active = models.BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):

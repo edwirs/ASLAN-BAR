@@ -63,13 +63,34 @@
 
         <hr>
         <h6>Grupos existentes</h6>
-        <ul>
-          {% for group in groups %}
-            <li>{{ group.name }}</li>
-          {% empty %}
-            <li>No hay grupos definidos.</li>
-          {% endfor %}
-        </ul>
+        <table class="table table-bordered table-sm" id="grupos">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th style="width:240px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in groups %}
+                <tr>
+                    <td>{{ g.name }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-xs btn-edit-group rounded-pill"
+                                data-id="{{ g.id }}" data-name="{{ g.name }}">
+                                <i class="fas fa-edit"></i> 
+                            Editar
+                        </button>
+
+                        <button class="btn btn-danger btn-xs btn-del-group rounded-pill"
+                                data-id="{{ g.id }}">
+                                <i class="fas fa-trash"></i> 
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
       </div>
 
       <!-- Tab 2: Usuarios -->
@@ -83,13 +104,38 @@
 
         <hr>
         <h6>Usuarios asignados</h6>
-        <ul>
-          {% for ug in user_groups %}
-            <li>{{ ug.user.username }} → {{ ug.group.name }}</li>
-          {% empty %}
-            <li>No hay usuarios asignados a grupos.</li>
-          {% endfor %}
-        </ul>
+        <table class="table table-bordered table-sm" id="usuarios-table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Grupo</th>
+                    <th style="width:220px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ug in user_groups %}
+                <tr>
+                    <td>{{ ug.user.username }}</td>
+                    <td>{{ ug.group.name }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-xs btn-edit-ug rounded-pill"
+                                data-id="{{ ug.id }}"
+                                data-user="{{ ug.user.id }}"
+                                data-group="{{ ug.group.id }}">
+                                <i class="fas fa-edit"></i> 
+                            Editar
+                        </button>
+
+                        <button class="btn btn-danger btn-xs btn-del-ug rounded-pill"
+                                data-id="{{ ug.id }}">
+                                <i class="fas fa-trash"></i> 
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
       </div>
 
       <!-- Tab 3: Stock -->
@@ -109,6 +155,7 @@
               <th>Producto</th>
               <th>Grupo</th>
               <th>Stock</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -117,6 +164,13 @@
                 <td>{{ s.product.name }}</td>
                 <td>{{ s.group.name }}</td>
                 <td>{{ s.stock }}</td>
+                <td>
+                  <button class="btn btn-danger btn-xs btn-del-stock rounded-pill"
+                          data-id="{{ s.id }}">
+                          <i class="fas fa-trash"></i> 
+                      Eliminar
+                  </button>
+                </td>
               </tr>
             {% empty %}
               <tr>
@@ -128,6 +182,195 @@
       </div>
 
     </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalEditGroup">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="group_id" id="edit_group_id">
+      <input type="hidden" name="edit_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header"><h5>Editar Grupo</h5></div>
+        <div class="modal-body">
+          <label>Nombre:</label>
+          <input type="text" name="name" id="edit_group_name" class="form-control">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-sm">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="modalDeleteGroup">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="group_id" id="del_group_id">
+      <input type="hidden" name="delete_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>Eliminar Grupo</h5>
+        </div>
+        <div class="modal-body">
+          ¿Seguro que deseas eliminar este grupo?
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDITAR GRUPO -->
+<div class="modal fade" id="modalEditGroup">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="group_id" id="edit_group_id">
+      <input type="hidden" name="edit_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Editar Grupo</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <label>Nombre del grupo:</label>
+          <input type="text" name="name" id="edit_group_name" class="form-control">
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary btn-sm">Guardar Cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ELIMINAR GRUPO -->
+<div class="modal fade" id="modalDeleteGroup">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="group_id" id="del_group_id">
+      <input type="hidden" name="delete_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Eliminar Grupo</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          ¿Estás seguro que deseas eliminar este grupo?  
+          <br><strong>Esto no se puede deshacer.</strong>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDITAR USUARIO-GRUPO -->
+<div class="modal fade" id="modalEditUG">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="ug_id" id="edit_ug_id">
+      <input type="hidden" name="edit_user_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">Editar Usuario Asignado</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+
+          <label>Usuario:</label>
+          <select name="user" id="edit_ug_user" class="form-control">
+            {% for u in users %}
+              <option value="{{ u.id }}">{{ u.username }}</option>
+            {% endfor %}
+          </select>
+
+          <label class="mt-2">Grupo:</label>
+          <select name="group" id="edit_ug_group" class="form-control">
+            {% for g in groups %}
+              <option value="{{ g.id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-warning btn-sm">Guardar Cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ELIMINAR USUARIO-GRUPO -->
+<div class="modal fade" id="modalDeleteUG">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="ug_id" id="del_ug_id">
+      <input type="hidden" name="delete_user_group" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Eliminar Asignación</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          ¿Seguro deseas eliminar esta asignación de usuario a grupo?
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ELIMINAR STOCK -->
+<div class="modal fade" id="modalDeleteStock">
+  <div class="modal-dialog">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="stock_id" id="del_stock_id">
+      <input type="hidden" name="delete_group_stock" value="1">
+
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Eliminar Stock Asignado</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          ¿Seguro deseas eliminar este stock asignado?
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 

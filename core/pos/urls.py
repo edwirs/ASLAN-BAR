@@ -10,6 +10,7 @@ from core.pos.views.buy.views import *
 from core.pos.views.provider.views import *
 from core.pos.views.bar.views import *
 from core.pos.views.inventory_manager.views import *
+from core.pos.views.productAutoAdd.views import *
 
 urlpatterns = [
     # category
@@ -55,4 +56,9 @@ urlpatterns = [
     path('bar/admin/add/', BarCreateView.as_view(), name='bar_admin_create'),
      #inventory manager
     path('inventory/management/', InventoryManagementView.as_view(), name='inventory_management'),
+    # productAutoAdd
+    path("productAutoAdd/", ProductAutoAddListView.as_view(), name='productautoadd_list'),
+    path("productAutoAdd/add/", ProductAutoAddCreateView.as_view(), name='productautoadd_create'),
+    path("productAutoAdd/update/<int:pk>/", ProductAutoAddUpdateView.as_view(), name='productautoadd_update'),
+    path("productAutoAdd/delete/<int:pk>/", ProductAutoAddDeleteView.as_view(), name='productautoadd_delete'),
 ]

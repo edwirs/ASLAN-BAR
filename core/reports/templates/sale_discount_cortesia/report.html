@@ -1,0 +1,40 @@
+{% extends 'report.html' %}
+{% load static %}
+{% block assets_report %}
+    <script src="{% static 'sale_discount_cortesia/js/report.js' %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content_report %}
+    <div class="row">
+        <div class="col-lg-5 col-md-12">
+            <div class="mb-3">
+                <label class="form-label fw-bold">{{ form.date_range.label }}:</label>
+                <div class="input-group mb-3">
+                    {{ form.date_range }}
+                    <button class="btn btn-primary btnSearchAll" type="button">
+                        <i class="fas fa-calendar-check"></i> Todas las ventas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <hr>
+            <table class="table table-bordered" id="tblReportDiscount" style="width:100%;">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo de venta</th>
+                    <th>Autorización</th>
+                    <th>Descripción</th>
+                    <th>Subtotal</th>
+                    <th>Valor descuento</th>
+                    <th>Empleado</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

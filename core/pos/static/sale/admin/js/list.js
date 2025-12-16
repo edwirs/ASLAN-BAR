@@ -34,13 +34,14 @@ var sale = {
                 {data: "discount_value"},   
                 {data: "paymentmethod.name"},
                 {data: "transfermethods.name"},
+                {data: "autorization_discount.name"},
                 {data: "delivered"},
                 {data: "payment"},
                 {data: "id"},
             ],
             columnDefs: [
                 {
-                    targets: [-6, -7, -8],
+                    targets: [-7, -8, -9],
                     class: 'text-center',
                     render: function (data, type, row) {
                         return '$' + parseFloat(data).toLocaleString('es-CL');

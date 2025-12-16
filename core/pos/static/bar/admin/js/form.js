@@ -6,7 +6,7 @@ var select_switch_discount;
 var select_switch_cortesia;
 var tblProducts, tblSearchProducts;
 var input_search_product, input_birthdate, input_date_joined, input_cash, input_change, input_discount_value;
-
+var input_description;
 var sale = {
     detail: {
         subtotal_0: 0.00,
@@ -153,6 +153,7 @@ $(function () {
     select_switch_discount = $('#switchDescuento');
     select_switch_cortesia = $('#switchCortesia');
     input_discount_value = $('input[name="discount_value"]');
+    input_description = $('input[name="description"]');
 
     // Client
 
@@ -222,11 +223,14 @@ $(function () {
         if (select_switch_discount.prop('checked')) {
             $('#discount').show();  // Mostrar si está activado
             $('#discount_value').show();  // Mostrar si está activado
+            $('#description').show();  // Mostrar si está activado
         } else if (select_switch_cortesia.prop('checked')) {
             $('#discount').show();  // Mostrar si está activado
+            $('#description').show();  // Mostrar si está activado
         } else {
             $('#discount').hide();  // Ocultar si no está activado
             $('#discount_value').hide();  // Ocultar si no está activado
+            $('#description').hide();  // Ocultar si no está activado
         }
     }
 
