@@ -107,7 +107,7 @@ var buy = {
             ],
             rowCallback: function (row, data, index) {
                 var tr = $(row).closest('tr');
-                var stock = !data.is_service ? data.stock : 1000000;
+                var stock = 1000000;
                 tr.find('input[name="cant"]')
                     .TouchSpin({
                         min: 1,
