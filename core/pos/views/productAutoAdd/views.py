@@ -14,7 +14,7 @@ from core.security.mixins import GroupPermissionMixin
 MODULE_NAME = 'Productos a descontar'
 
 class ProductAutoAddListView(GroupPermissionMixin, TemplateView):
-    template_name = "productautoadd/list.html"
+    template_name = "productAutoAdd/list.html"
     permission_required = 'view_product'
     model = ProductAutoAdd
 
@@ -50,7 +50,7 @@ class ProductAutoAddListView(GroupPermissionMixin, TemplateView):
 
 class ProductAutoAddCreateView(GroupPermissionMixin, CreateView):
     model = ProductAutoAdd
-    template_name = "productautoadd/create.html"
+    template_name = "productAutoAdd/create.html"
     form_class = ProductAutoAddForm
     success_url = reverse_lazy('productautoadd_list')
     permission_required = 'add_product'
@@ -78,7 +78,7 @@ class ProductAutoAddCreateView(GroupPermissionMixin, CreateView):
 
 class ProductAutoAddUpdateView(GroupPermissionMixin, UpdateView):
     model = ProductAutoAdd
-    template_name = "productautoadd/create.html"
+    template_name = "productAutoAdd/create.html"
     form_class = ProductAutoAddForm
     success_url = reverse_lazy("productautoadd_list")
     permission_required = 'change_product'
