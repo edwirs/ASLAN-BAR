@@ -57,8 +57,8 @@ urlpatterns = [
      #inventory manager
     path('inventory/management/', InventoryManagementView.as_view(), name='inventory_management'),
     # productAutoAdd
-    path("productAutoAdd/", ProductAutoAddListView.as_view(), name='productautoadd_list'),
-    path("productAutoAdd/add/", ProductAutoAddCreateView.as_view(), name='productautoadd_create'),
-    path("productAutoAdd/update/<int:pk>/", ProductAutoAddUpdateView.as_view(), name='productautoadd_update'),
-    path("productAutoAdd/delete/<int:pk>/", ProductAutoAddDeleteView.as_view(), name='productautoadd_delete'),
+    path('productAutoAdd/', ProductAutoAddListView.as_view(), name='productautoadd_list'),
+    path('productAutoAdd/add/', ProductAutoAddCreateView.as_view(), name='productautoadd_create'),
+    path('productAutoAdd/update/<int:pk>/', ProductAutoAddUpdateView.as_view(), name='productautoadd_update'),
+    path('productAutoAdd/delete/<int:pk>/', ProductAutoAddDeleteView.as_view(), name='productautoadd_delete'),
 ]
