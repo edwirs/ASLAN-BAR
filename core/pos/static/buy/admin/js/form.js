@@ -22,7 +22,7 @@ var buy = {
         this.detail.products.forEach(function (value, index, array) {
             value.iva = parseFloat(tax);
             value.price_with_vat = value.pvp + (value.pvp * value.iva);
-            value.subtotal = value.pvp * value.cant;
+            value.subtotal = value.price * value.cant;
             value.total_dscto = value.subtotal * parseFloat((value.dscto / 100));
             value.total_iva = (value.subtotal - value.total_dscto) * value.iva;
             value.total = value.subtotal - value.total_dscto;
@@ -34,18 +34,18 @@ var buy = {
         this.detail.dscto = parseFloat($('input[name="dscto"]').val());
         this.detail.total_dscto = this.detail.subtotal * (this.detail.dscto / 100);
         this.detail.total_iva = this.detail.products.filter(value => value.with_tax).reduce((a, b) => a + (b.total_iva || 0), 0);
-        this.detail.total = this.detail.subtotal + this.detail.total_iva - this.detail.total_dscto;
+        this.detail.total = this.detail.subtotal - this.detail.total_dscto;
 
-        $('input[name="subtotal_0"]').val(this.detail.subtotal_0.toFixed(2));
-        $('input[name="subtotal_12"]').val(this.detail.subtotal_12.toFixed(2));
-        $('input[name="iva"]').val(this.detail.iva.toFixed(2));
-        $('input[name="total_iva"]').val(this.detail.total_iva.toFixed(2));
-        $('input[name="total_dscto"]').val(this.detail.total_dscto.toFixed(2));
-        $('input[name="total"]').val(this.detail.total.toFixed(2));
+        $('input[name="subtotal_0"]').val(this.detail.subtotal_0.toLocaleString('es-CL'));
+        $('input[name="subtotal_12"]').val(this.detail.subtotal_12.toLocaleString('es-CL'));
+        $('input[name="iva"]').val(this.detail.iva.toLocaleString('es-CL'));
+        $('input[name="total_iva"]').val(this.detail.total_iva.toLocaleString('es-CL'));
+        $('input[name="total_dscto"]').val(this.detail.total_dscto.toLocaleString('es-CL'));
+        $('input[name="total"]').val(this.detail.total.toLocaleString('es-CL'));
 
         var cash = parseFloat(input_cash.val());
         var change = cash - buy.detail.total;
-        input_change.val(change.toFixed(2));
+        input_change.val(change.toLocaleString('es-CL'));
     },
     addProduct: function (item) {
         this.detail.products.push(item);
@@ -69,7 +69,7 @@ var buy = {
                 {data: "short_name"},
                 {data: "stock"},
                 {data: "cant"},
-                {data: "pvp"},
+                {data: "price"},
                 {data: "total"},
             ],
             columnDefs: [
@@ -91,10 +91,17 @@ var buy = {
                     }
                 },
                 {
-                    targets: [-1, -2],
+                    targets: [-2],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return '$' + data.toFixed(2);
+                        return '<input type="text" class="form-control" autocomplete="off" name="price" value="' + data + '">';
+                    }
+                },
+                {
+                    targets: [-1],
+                    class: 'text-center',
+                    render: function (data, type, row) {
+                        return '$' + parseFloat(data).toLocaleString('es-CL');
                     }
                 },
                 {
@@ -107,11 +114,19 @@ var buy = {
             ],
             rowCallback: function (row, data, index) {
                 var tr = $(row).closest('tr');
-                var stock = 1000000;
+                var stock = !data.is_service ? data.stock : 1000000;
                 tr.find('input[name="cant"]')
                     .TouchSpin({
                         min: 1,
-                        max: stock
+                        max: Number.MAX_SAFE_INTEGER
+                    })
+                    .on('keypress', function (e) {
+                        return validate_text_box({'event': e, 'type': 'numbers'});
+                    });
+                tr.find('input[name="price"]')
+                    .TouchSpin({
+                        min: 1,
+                        max: Number.MAX_SAFE_INTEGER
                     })
                     .on('keypress', function (e) {
                         return validate_text_box({'event': e, 'type': 'numbers'});
@@ -292,10 +307,6 @@ $(function () {
         select: function (event, ui) {
             event.preventDefault();
             $(this).blur();
-            if (ui.item.stock === 0 && !ui.item.is_service) {
-                message_error('El stock de este producto esta en 0');
-                return false;
-            }
             ui.item.cant = 1;
             buy.addProduct(ui.item);
             $(this).val('').focus();
@@ -335,7 +346,7 @@ $(function () {
                     targets: [-3],
                     class: 'text-center',
                     render: function (data, type, row) {
-                        return '$' + data.toFixed(2);
+                        return '$' + parseFloat(data).toLocaleString('es-CL');
                     }
                 },
                 {
@@ -397,6 +408,12 @@ $(function () {
         .on('change', 'input[name="cant"]', function () {
             var tr = tblProducts.cell($(this).closest('td, li')).index();
             buy.detail.products[tr.row].cant = parseInt($(this).val());
+            buy.calculateInvoice();
+            $('td:last', tblProducts.row(tr.row).node()).html('$' + buy.detail.products[tr.row].total.toFixed(2));
+        })
+        .on('change', 'input[name="price"]', function () {
+            var tr = tblProducts.cell($(this).closest('td, li')).index();
+            buy.detail.products[tr.row].price = parseInt($(this).val());
             buy.calculateInvoice();
             $('td:last', tblProducts.row(tr.row).node()).html('$' + buy.detail.products[tr.row].total.toFixed(2));
         })
