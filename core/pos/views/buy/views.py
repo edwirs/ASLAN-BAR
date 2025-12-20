@@ -86,7 +86,7 @@ class BuyCreateView(GroupPermissionMixin, CreateView):
                         detail.buy_id_id = buy.id
                         detail.product_id = product.id
                         detail.cant = int(i['cant'])
-                        detail.price = float(i['pvp'])
+                        detail.price = float(i['price'])
                         detail.dscto = float(i['dscto']) / 100
                         detail.save()
                         buy.calculate_detail()
@@ -98,7 +98,7 @@ class BuyCreateView(GroupPermissionMixin, CreateView):
                 ids = json.loads(request.POST['ids'])
                 data = []
                 term = request.POST['term']
-                queryset = Product.objects.exclude(id__in=ids).order_by('name')
+                queryset = Product.objects.filter(is_service=False).exclude(id__in=ids).order_by('code')
                 if len(term):
                     queryset = queryset.filter(Q(name__icontains=term) | Q(code__icontains=term))
                     queryset = queryset[:10]
@@ -124,7 +124,7 @@ class BuyCreateView(GroupPermissionMixin, CreateView):
         return HttpResponse(json.dumps(data), content_type='application/json')
 
     def get_final_consumer(self):
-        queryset = Provider.objects.filter(dni='9999999999999')
+        queryset = Provider.objects.filter(dni='1070964494')
         if queryset.exists():
             return json.dumps(queryset[0].toJSON())
         return {}
