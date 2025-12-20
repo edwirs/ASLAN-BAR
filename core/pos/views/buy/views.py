@@ -98,7 +98,7 @@ class BuyCreateView(GroupPermissionMixin, CreateView):
                 ids = json.loads(request.POST['ids'])
                 data = []
                 term = request.POST['term']
-                queryset = Product.objects.filter(Q(stock__gt=0) | Q(is_service=True)).exclude(id__in=ids).order_by('name')
+                queryset = Product.objects.exclude(id__in=ids).order_by('name')
                 if len(term):
                     queryset = queryset.filter(Q(name__icontains=term) | Q(code__icontains=term))
                     queryset = queryset[:10]
