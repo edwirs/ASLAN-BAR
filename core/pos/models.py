@@ -416,7 +416,7 @@ class PriceDetail(models.Model):
 
 class Buy(models.Model):
     company = models.ForeignKey(Company, on_delete=models.PROTECT, verbose_name='Compañia')
-    provider = models.ForeignKey(Client, on_delete=models.PROTECT, verbose_name='Proveedor')
+    provider = models.ForeignKey(Provider, on_delete=models.PROTECT, verbose_name='Proveedor')
     employee = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Empleado')
     creation_date = models.DateTimeField(auto_now_add=True, verbose_name='Fecha y hora de registro')
     date_joined = models.DateField(default=datetime.now, verbose_name='Fecha de registro')
